@@ -1,0 +1,35 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Fluid properties (guide Section 2.5)
+
+phases (water air);
+
+water
+{
+    transportModel  Newtonian;
+    nu              1e-06;   // kinematic viscosity [m^2/s]
+    rho             1000;    // density [kg/m^3]
+}
+
+air
+{
+    transportModel  Newtonian;
+    nu              1.5e-05; // kinematic viscosity [m^2/s]
+    rho             1.25;    // density [kg/m^3]
+}
+
+sigma           0.07;        // surface tension [N/m]
+
+// ************************************************************************* //

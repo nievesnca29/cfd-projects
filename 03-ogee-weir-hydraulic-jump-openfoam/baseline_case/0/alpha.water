@@ -1,0 +1,75 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Initial condition: alpha=0 everywhere (setFields will fill water regions)
+// setFieldsDict sets:
+//   upstream   x[-0.702, 0]    y[0, 0.200] -> alpha=1
+//   downstream x[0,      1.755] y[0, 0.154] -> alpha=1
+
+dimensions      [0 0 0 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        // Dirichlet: water below h1=0.20m, air above (guide Table 2.1)
+        // Y is the vertical axis in this case.
+        type            codedFixedValue;
+        value           uniform 0;
+        name            inletAlpha;
+        code
+        #{
+            const vectorField& cf = this->patch().Cf();
+            scalarField& field = *this;
+            const scalar h1 = 0.20;
+            forAll(cf, i)
+            {
+                field[i] = (cf[i].y() < h1) ? 1.0 : 0.0;
+            }
+        #};
+    }
+
+    outlet
+    {
+        // Neumann (guide Table 2.1)
+        type            zeroGradient;
+    }
+
+    atmosphere
+    {
+        // Air inflow only (guide Section 2.3.4)
+        type            inletOutlet;
+        inletValue      uniform 0;
+        value           uniform 0;
+    }
+
+    lowerWall
+    {
+        type            zeroGradient;
+    }
+
+    front
+    {
+        type            empty;
+    }
+
+    back
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

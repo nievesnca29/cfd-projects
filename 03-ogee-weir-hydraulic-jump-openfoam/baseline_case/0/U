@@ -1,0 +1,74 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inlet
+    {
+        // Dirichlet: U1=0.25 m/s in water region (y < h1), zero in air
+        // Y is the vertical axis. (guide Section 2.3.1, Table 2.1)
+        type            codedFixedValue;
+        value           uniform (0 0 0);
+        name            inletU;
+        code
+        #{
+            const vectorField& cf = this->patch().Cf();
+            vectorField& field = *this;
+            const scalar h1 = 0.20;
+            const scalar U1 = 0.25;
+            forAll(cf, i)
+            {
+                field[i] = (cf[i].y() < h1)
+                           ? vector(U1, 0, 0)
+                           : vector(0,  0, 0);
+            }
+        #};
+    }
+
+    outlet
+    {
+        // Neumann (guide Table 2.1)
+        type            zeroGradient;
+    }
+
+    atmosphere
+    {
+        // Pressure-inlet-outlet velocity (guide Section 2.3.4)
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+
+    lowerWall
+    {
+        // No-slip (guide Section 2.3.3)
+        type            noSlip;
+    }
+
+    front
+    {
+        type            empty;
+    }
+
+    back
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

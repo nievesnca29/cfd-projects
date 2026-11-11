@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                |                                                 |
+| \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \    /   O peration     | Version:  9                                     |
+|   \  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Initial condition (guide Section 2.4, Fig. 2.3):
+//   - Upstream of weir crest (x < 0): water up to h1 = 0.20 m
+//   - Downstream of weir crest (x > 0): water up to h2 = 0.154 m
+//   - Everything else: air (alpha = 0)
+// Y is the vertical axis.
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 0
+);
+
+regions
+(
+    // Upstream region: x in [-0.702, 0], y in [0, 0.20]
+    boxToCell
+    {
+        box ( -0.702 0.0 -0.006 ) ( 0.0 0.200 0.006 );
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+
+    // Downstream region: x in [0, 1.755], y in [0, 0.154]
+    boxToCell
+    {
+        box ( 0.0 0.0 -0.006 ) ( 1.755 0.154 0.006 );
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+);
+
+// ************************************************************************* //

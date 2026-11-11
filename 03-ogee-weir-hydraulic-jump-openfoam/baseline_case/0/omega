@@ -1,0 +1,62 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// omega_inlet = 0.001 s^-1 (guide Section 2.3.1)
+// Wall value: omegaWallFunction computes ~56 s^-1 for k=0.001, Delta=0.005m.
+// The "value" must be of the same order to avoid bounding (negative omega)
+// in the first timestep.
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 0.001;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0.001;
+    }
+
+    outlet
+    {
+        type            zeroGradient;
+    }
+
+    atmosphere
+    {
+        type            inletOutlet;
+        inletValue      uniform 0.001;
+        value           uniform 0.001;
+    }
+
+    lowerWall
+    {
+        // Consistent initial value avoids "bounding omega" warnings at t=0
+        type            omegaWallFunction;
+        value           uniform 56;
+    }
+
+    front
+    {
+        type            empty;
+    }
+
+    back
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,146 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+//
+// Adapted from weirOverflow tutorial to Lab2 parameters (guide Section 2.1-2.2)
+//
+// H = 0.117 m, a = 3H = 0.351 m
+// Domain: x in [-2a, 5a] = [-0.702, 1.755]
+//         y in [0, 2.5H]  = [0, 0.2925]   (Y = vertical axis)
+//         z in [-0.005, 0.005]             (pseudo-2D, 1 cell)
+//
+// The weir is a rectangular step approximation (standard blockMesh approach).
+// Cell size Delta = 0.005 m uniform throughout.
+//
+// Vertex layout (viewed from front, z=-0.005 plane):
+//
+//  8----9----------10---11    y=0.2925
+//  |    |          |    |
+//  4----5          6----7    y=0.117
+//  |   [  WEIR   ]    |
+//  0----1          2----3    y=0.000
+//
+//  x: -0.702  -0.351   0.351  1.755
+//
+// 5 fluid blocks (the weir solid x[-0.351,0.351] x y[0,0.117] is not meshed):
+//   Block 0: upstream lower    x[-0.702,-0.351] y[0,0.117]
+//   Block 1: downstream lower  x[0.351, 1.755]  y[0,0.117]
+//   Block 2: upstream upper    x[-0.702,-0.351] y[0.117,0.2925]
+//   Block 3: over-weir upper   x[-0.351,0.351]  y[0.117,0.2925]
+//   Block 4: downstream upper  x[0.351, 1.755]  y[0.117,0.2925]
+
+convertToMeters 1;
+
+vertices
+(
+    // z = -0.005 plane
+    ( -0.702  0.0    -0.005 )   //  0
+    ( -0.351  0.0    -0.005 )   //  1
+    (  0.351  0.0    -0.005 )   //  2
+    (  1.755  0.0    -0.005 )   //  3
+    ( -0.702  0.117  -0.005 )   //  4
+    ( -0.351  0.117  -0.005 )   //  5
+    (  0.351  0.117  -0.005 )   //  6
+    (  1.755  0.117  -0.005 )   //  7
+    ( -0.702  0.2925 -0.005 )   //  8
+    ( -0.351  0.2925 -0.005 )   //  9
+    (  0.351  0.2925 -0.005 )   // 10
+    (  1.755  0.2925 -0.005 )   // 11
+
+    // z = +0.005 plane
+    ( -0.702  0.0     0.005 )   // 12
+    ( -0.351  0.0     0.005 )   // 13
+    (  0.351  0.0     0.005 )   // 14
+    (  1.755  0.0     0.005 )   // 15
+    ( -0.702  0.117   0.005 )   // 16
+    ( -0.351  0.117   0.005 )   // 17
+    (  0.351  0.117   0.005 )   // 18
+    (  1.755  0.117   0.005 )   // 19
+    ( -0.702  0.2925  0.005 )   // 20
+    ( -0.351  0.2925  0.005 )   // 21
+    (  0.351  0.2925  0.005 )   // 22
+    (  1.755  0.2925  0.005 )   // 23
+);
+
+// nx_up=70 (0.351/0.005), nx_weir=140 (0.702/0.005), nx_dn=281 (1.404/0.005)
+// ny_lo=23 (0.117/0.005 rounded), ny_hi=35 (0.1755/0.005 rounded)
+
+blocks
+(
+    // Block 0: upstream lower
+    hex (0 1 5 4 12 13 17 16) (70 23 1) simpleGrading (1 1 1)
+    // Block 1: downstream lower
+    hex (2 3 7 6 14 15 19 18) (281 23 1) simpleGrading (1 1 1)
+    // Block 2: upstream upper
+    hex (4 5 9 8 16 17 21 20) (70 35 1) simpleGrading (1 1 1)
+    // Block 3: over-weir upper (fluid above weir crest)
+    hex (5 6 10 9 17 18 22 21) (140 35 1) simpleGrading (1 1 1)
+    // Block 4: downstream upper
+    hex (6 7 11 10 18 19 23 22) (281 35 1) simpleGrading (1 1 1)
+);
+
+edges ();
+
+patches
+(
+    patch inlet
+    (
+        (0 12 16 4)
+        (4 16 20 8)
+    )
+
+    patch outlet
+    (
+        (3 7 19 15)
+        (7 11 23 19)
+    )
+
+    wall lowerWall
+    (
+        (0 1 13 12)      // channel floor upstream
+        (1 5 17 13)      // weir upstream vertical face
+        (5 6 18 17)      // weir top face
+        (6 2 14 18)      // weir downstream vertical face
+        (2 3 15 14)      // channel floor downstream
+    )
+
+    patch atmosphere
+    (
+        (8 20 21 9)
+        (9 21 22 10)
+        (10 22 23 11)
+    )
+
+    empty front
+    (
+        (12 13 17 16)
+        (14 15 19 18)
+        (16 17 21 20)
+        (17 18 22 21)
+        (18 19 23 22)
+    )
+
+    empty back
+    (
+        (0 4 5 1)
+        (2 6 7 3)
+        (4 8 9 5)
+        (5 9 10 6)
+        (6 10 11 7)
+    )
+);
+
+mergePatchPairs ();
+
+// ************************************************************************* //

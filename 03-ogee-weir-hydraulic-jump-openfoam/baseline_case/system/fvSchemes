@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                |                                                 |
+| \      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \    /   O peration     | Version:  9                                     |
+|   \  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+//
+// STRATEGY (guide Section 2.7 requires >= 2nd order in space, PIMPLE unsteady):
+//
+//   PHASE 1 (t = 0 to ~1 s): Euler in time.
+//     Robust first-order scheme for the startup transient. Avoids the
+//     instabilities caused by CrankNicolson with inconsistent initial fields.
+//
+//   PHASE 2 (t > ~1 s): Switch to CrankNicolson 0.9 in time.
+//     While the simulation is running, open this file and replace:
+//       default   Euler;
+//     with:
+//       default   CrankNicolson 0.9;
+//     then save. OpenFOAM will pick up the change at the next write interval
+//     (runTimeModifiable yes). No need to stop or restart.
+//
+//   All spatial schemes are 2nd order throughout, satisfying the guide.
+
+ddtSchemes
+{
+    default         Euler;
+    // Switch to this for Phase 2:
+    // default      CrankNicolson 0.9;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+    grad(U)         Gauss linear;
+    grad(k)         Gauss linear;
+    grad(omega)     Gauss linear;
+}
+
+divSchemes
+{
+    default                                     none;
+
+    // Phase fraction - vanLeer: 2nd order bounded, standard for VOF
+    div(phi,alpha)                              Gauss vanLeer;
+    div(phirb,alpha)                            Gauss interfaceCompression;
+    div(phi,alpha.water)                        Gauss vanLeer;
+    div(phirb,alpha.water)                      Gauss interfaceCompression;
+
+    // Momentum - linearUpwind: 2nd order with gradient limiter, stable with
+    // free surface. Satisfies guide requirement of >= 2nd order in space.
+    div(rhoPhi,U)                               Gauss linearUpwind grad(U);
+
+    // Turbulence - linearUpwind: 2nd order, stable
+    div(phi,k)                                  Gauss linearUpwind grad(k);
+    div(phi,omega)                              Gauss linearUpwind grad(omega);
+
+    // Viscous stress
+    div(((rho*nuEff)*dev2(T(grad(U)))))         Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+wallDist
+{
+    method          meshWave;
+}
+
+fluxRequired
+{
+    default         no;
+    p_rgh           yes;
+    pcorr           yes;
+    alpha.water     yes;
+}
+
+// ************************************************************************* //

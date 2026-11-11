@@ -1,0 +1,80 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  9
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      p_rgh;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// p_rgh = p - rho*g*h  (dynamic pressure used internally by interFoam)
+// Y is the vertical axis, gravity acts in -Y direction.
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        // Neumann: pressure adjusts to be consistent with velocity BC
+        // (guide Table 2.1)
+        type            fixedFluxPressure;
+        gradient        uniform 0;
+        value           uniform 0;
+    }
+
+    outlet
+    {
+        // Hydrostatic: p_rgh = rho*g*(h2 - y) for y < h2, else 0
+        // rho_water=1000, g=9.81, h2=0.154 m (guide Section 2.3.2)
+        type            codedFixedValue;
+        value           uniform 0;
+        name            outletPrgh;
+        code
+        #{
+            const vectorField& cf = this->patch().Cf();
+            scalarField& field = *this;
+            const scalar rho = 1000.0;
+            const scalar g   = 9.81;
+            const scalar h2  = 0.154;
+            forAll(cf, i)
+            {
+                const scalar y = cf[i].y();
+                field[i] = (y < h2) ? rho*g*(h2 - y) : 0.0;
+            }
+        #};
+    }
+
+    atmosphere
+    {
+        // p_rgh = 0 at atmosphere (gauge pressure = 0, guide Section 2.3.4)
+        type            fixedValue;
+        value           uniform 0;
+    }
+
+    lowerWall
+    {
+        type            fixedFluxPressure;
+        gradient        uniform 0;
+        value           uniform 0;
+    }
+
+    front
+    {
+        type            empty;
+    }
+
+    back
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //
