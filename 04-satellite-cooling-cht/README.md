@@ -5,7 +5,7 @@ phase of a low Earth orbit (LEO). The model resolves conduction, convection and 
 Course project, MSc in Computational Fluid Dynamics, UPV (academic year 2025/26).
 
 **Authors:** Nieves Castellanos Arnáez, Fabio Ferro, Mattia Giusto, Julio Gómez San Juan
-**Presentation:** [`report/Thermal_Final_project_`](report/Thermal_Final_project_)[`report/satellite_cooling_presentation.pdf`](report/satellite_cooling_presentation.pdf)
+**Presentation:** [`report/Thermal_Final_project_.pdf`](report/Thermal_Final_project_.pdf)[`report/satellite_cooling_presentation.pdf`](report/satellite_cooling_presentation.pdf)
 
 ![Temperature field](figures/temperature_cross_section.png)
 
